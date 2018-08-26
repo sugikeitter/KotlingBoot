@@ -8,7 +8,7 @@
 - 地味に`WebFlux`を使ってるので、`Netty`のイベントループで動いている
 
 ## GitHub
-- https://github.com/sugikeitter/Kotlingboot
+- https://github.com/sugikeitter/KotlingBoot
 
 ## 参考
 ### 公式ドキュメント
