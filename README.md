@@ -21,7 +21,6 @@
 
 ## 必要なファイル
 ```shell
-$ tree .
 .
 ├── build.gradle
 ├── Dockerfile
@@ -69,13 +68,12 @@ $ tree .
   ![image](https://user-images.githubusercontent.com/8069859/44628723-a5f4ec00-a980-11e8-98f4-479bed7c711a.png)
   - "OK"
   ![image](https://user-images.githubusercontent.com/8069859/44628745-1439ae80-a981-11e8-9aca-380ae3d98640.png)
-- ほぼ動くものが完成
 
 ### Contllerクラス作成
-- `src/main/kotlin/com/sugikeitter/kotlingboot/controller`パッケージを作成し、`HelloController.kt`を作成
+- `src/main/kotlin/com/sugikeitter/kotlingboot/controller`パッケージを作成し、`HelloController.kt`を作成
   - クラスに`@RestController`をつけることでURLマッピング対象クラスに
   - メソッドに`@GetMapping("/hello")`をつけることで、`GET /hello`のエントリポイントに対応
-  =```Kotlin
+  ```Kotlin
   package com.sugikeitter.kotlingboot.controller
 
   import com.sugikeitter.kotlingboot.data.Hello
@@ -91,10 +89,10 @@ $ tree .
   }
   ```
 
-### dataクラス作成
-- `src/main/kotlin/com/sugikeitter/kotlingboot/data`パッケージを作成し、`Hello.kt`を作成
+### dataクラス作成
+- `src/main/kotlin/com/sugikeitter/kotlingboot/data`パッケージを作成し、`Hello.kt`を作成
   - `Kotlin`のdataクラスの機能を利用
-  =```Kotlin
+  ```Kotlin
   package com.sugikeitter.kotlingboot.data
 
   import java.util.Date
@@ -105,7 +103,7 @@ $ tree .
   )
   ```
 
-### 設定ファイルの作成
+### 設定ファイルの作成
 - 今回は`src/main/resources/application.yml`を作成し、ここに設定を追記する
   - 利用するポートを`8888`にしてみた
   ```YAML
@@ -144,14 +142,16 @@ $ ./gradlew bootRun
 ```
 
 - リクエストが帰ってくることを確認
-```
-$ curl http://localhost:8888/hello
+```shell
+curl http://localhost:8888/hello
+---
 {"message":"Hello. World.","date":"2018-08-26T14:15:02.436+0000"}
+---
 ```
 
 ## Dockerfileの作成
 - 最初にjavaビルド環境用のimageを作成し、`Gradle`でビルドしてjarファイルを作成する
-- 必要なjarファイルだけを配備してサイズを小さくし、container起動時にjarを起動させるimageを作成
+- 必要なjarファイルだけを配備してサイズを小さくし、container起動時にjarを起動させるimageを作成
 - かなり**えいや**で作ったので他に良い方法がないかは調べたい
 ```Docker
 FROM openjdk:8-slim
