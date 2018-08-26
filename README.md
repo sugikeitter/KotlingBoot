@@ -8,7 +8,7 @@
 - 地味に`WebFlux`を使ってるので、`Netty`のイベントループで動いている
 
 ## GitHub
-- https://github.com/sugikeitter/KotlingBoot
+- https://github.com/sugikeitter/Kotlingboot
 
 ## 参考
 ### 公式ドキュメント
@@ -20,7 +20,7 @@
 - [Kotlin文法 - データクラス, ジェネリクス - Qiita](https://qiita.com/k5n/items/18adb5c3503a54e96c22)
 
 ## 必要なファイル
-```bash
+```shell
 $ tree .
 .
 ├── build.gradle
@@ -72,10 +72,10 @@ $ tree .
 - ほぼ動くものが完成
 
 ### Contllerクラス作成
-- `src/main/kotlin/com/sugikeitter/kotlingboot/controller`パッケージを作成し、`HelloControlle.kt`を作成
+- `src/main/kotlin/com/sugikeitter/kotlingboot/controller`パッケージを作成し、`HelloController.kt`を作成
   - クラスに`@RestController`をつけることでURLマッピング対象クラスに
   - メソッドに`@GetMapping("/hello")`をつけることで、`GET /hello`のエントリポイントに対応
-  ```kotlin
+  =```Kotlin
   package com.sugikeitter.kotlingboot.controller
 
   import com.sugikeitter.kotlingboot.data.Hello
@@ -91,10 +91,10 @@ $ tree .
   }
   ```
 
-### datクラス作成
-- `src/main/kotlin/com/sugikeitter/kotlingbootdata`パッケージを作成し、`Hello.kt`を作成
+### dataクラス作成
+- `src/main/kotlin/com/sugikeitter/kotlingboot/data`パッケージを作成し、`Hello.kt`を作成
   - `Kotlin`のdataクラスの機能を利用
-  ```kotlin
+  =```Kotlin
   package com.sugikeitter.kotlingboot.data
 
   import java.util.Date
@@ -105,16 +105,16 @@ $ tree .
   )
   ```
 
-### 設定ファイル作成
+### 設定ファイルの作成
 - 今回は`src/main/resources/application.yml`を作成し、ここに設定を追記する
   - 利用するポートを`8888`にしてみた
-  ```yaml
+  ```YAML
   server:
     port: 8888
   ```
 ### 動作確認
 - `Gradle`プラグインの`bootRun`を使ってビルド&起動
-```bash
+```shell
 $ ./gradlew bootRun
 
 > Task :bootRun
@@ -151,8 +151,9 @@ $ curl http://localhost:8888/hello
 
 ## Dockerfileの作成
 - 最初にjavaビルド環境用のimageを作成し、`Gradle`でビルドしてjarファイルを作成する
-- 必要なjarファイルだけを配備してサイズ小さくし、container起動時にjarを起動させるimageを作成
-```docker
+- 必要なjarファイルだけを配備してサイズを小さくし、container起動時にjarを起動させるimageを作成
+- かなり**えいや**で作ったので他に良い方法がないかは調べたい
+```Docker
 FROM openjdk:8-slim
 RUN mkdir -p /opt/kotlingboot
 ADD . /opt/kotlingboot
@@ -163,4 +164,141 @@ FROM openjdk:8-slim
 COPY --from=0 /opt/kotlingboot/build/libs/kotlingboot-0.0.1-SNAPSHOT.jar /opt/app.jar
 ENV PORT 8888
 CMD ["java", "-jar", "/opt/app.jar"]
+```
+
+## GKEで動作させる
+- [コンテナ化されたウェブ アプリケーションのデプロイ  |  Kubernetes Engine のドキュメント  |  Google Cloud](https://cloud.google.com/kubernetes-engine/docs/tutorials/hello-app)に沿って、今回作成した`Kotling Boot`コンテナをデプロイするように変更した
+- GCPを利用できる状態にしてプロジェクトも作成し、`Google Cloud Shell`を利用できる状態であることを前提に進める
+
+### 初期設定
+- 環境変数などを設定
+```shell
+# リージョンはとりあえず東京で
+gcloud config set compute/zone asia-northeast1-c
+# チュートリアルの通りPROJECT_IDを環境変数にしておく
+export PROJECT_ID="$(gcloud config get-value project -q)"
+```
+
+### Docker imageのビルドとプッシュ
+```shell
+# 作成したリポジトリをclone
+git clone https://github.com/sugikeitter/KotlingBoot.git
+# アプリのルートディレクトリへ移動
+cd ./KotlingBoot
+# imageのビルド(しばらく待つ)
+docker build -t gcr.io/${PROJECT_ID}/hello-app-kotlingboot:v1 .
+# 確認したら、ベースイメージ、ビルド用の一時イメージ(名無し)、最終イメージの3つが確認できる
+docker images
+---
+REPOSITORY                                    TAG                 IMAGE ID            CREATED              SIZE
+gcr.io/kube-01-212312/hello-app-kotlingboot   v1                  4af1f5b45ade        About a minute ago   264MB
+<none>                                        <none>              89727e75f7f8        About a minute ago   492MB
+openjdk                                       8-slim              e12b22a5b022        11 days ago          244MB
+---
+# Googleのリポジトリにpush
+gcloud docker -- push gcr.io/${PROJECT_ID}/hello-app-kotlingboot:v1
+```
+
+### プッシュしたimageをローカルで動作確認
+```shell
+# 8888ポートで起動
+docker run --rm -p 8888:8888 gcr.io/${PROJECT_ID}/hello-app-kotlingboot:v1
+```
+
+- 別でGoogle Cloud Shellを開く
+```shell
+# 動作確認成功
+curl http://localhost:8888/hello
+---
+{"message":"Hello. World.","date":"2018-08-26T15:16:59.591+0000"}
+---
+```
+
+- KotlingBootを停止させる
+```
+# KotlingBootを起動しているShellで`Ctrl + c`
+~~~
+^C2018-08-26 15:19:00.735  INFO 1 --- [       Thread-7] onfigReactiveWebServerApplicationContext : Closing org.springframework.boot.web.reactive.contex
+t.AnnotationConfigReactiveWebServerApplicationContext@b065c63: startup date [Sun Aug 26 15:16:41 UTC 2018]; root of context hierarchy
+2018-08-26 15:19:00.744  INFO 1 --- [       Thread-7] o.s.j.e.a.AnnotationMBeanExporter        : Unregistering JMX-exposed beans on shutdown
+2018-08-26 15:19:00.757  INFO 1 --- [       Thread-7] r.ipc.netty.tcp.BlockingNettyContext     : Stopped HttpServer on /0.0.0.0:8888
+```
+
+### kubernatesでアプリを動作させる
+#### クラスタ作成
+```shell
+# node3つでクラスタ作成(しばらく待つ)
+gcloud container clusters create kotlingboot --num-nodes=3
+# クラスタ作成確認
+gcloud container clusters list
+---
+NAME         LOCATION           MASTER_VERSION  MASTER_IP      MACHINE_TYPE   NODE_VERSION  NUM_NODES  STATUS
+kotlingboot  asia-northeast1-c  1.9.7-gke.6     35.200.10.183  n1-standard-1  1.9.7-gke.6   3          RUNNING
+---
+# 完了したらクラスタ認証情報を取得
+gcloud container clusters get-credentials kotlingboot
+```
+
+#### デプロイ
+```shell
+# アプリのデプロイ
+kubectl run hello-kotlingboot --image=gcr.io/${PROJECT_ID}/hello-app-kotlingboot:v1 --port 8888
+# podが作成されていることを確認
+kubectl get pods
+---
+NAME                                 READY     STATUS              RESTARTS   AGE
+hello-kotlingboot-7c7dfcfdcc-t6s6n   0/1       ContainerCreating   0          7s
+---
+
+# 外部公開できるLBの作成
+kubectl expose deployment hello-kotlingboot --type=LoadBalancer --port 80 --target-port 8888
+# LBが作成されていることを確認
+kubectl get deployment hello-kotlingboot
+---
+NAME                DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+hello-kotlingboot   1         1         1            1           1m
+---
+# 外部公開されているIPの確認
+kubectl get service
+---
+NAME                TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)        AGE
+hello-kotlingboot   LoadBalancer   10.31.254.26   35.221.107.65   80:31484/TCP   1m
+kubernetes          ClusterIP      10.31.240.1    <none>          443/TCP        5m
+---
+```
+
+#### 動作確認
+- 公開されたIPを利用し`http://10.31.254.26/hello`へブラウザからリクエスト
+![image](https://user-images.githubusercontent.com/8069859/44629883-8cf43700-a990-11e8-9dd2-ce9dda0521c0.png)
+
+#### スケールさせてみる
+```shell
+# レプリカを3に
+kubectl scale deployment hello-kotlingboot --replicas=3
+
+# deploymentが増えている
+kubectl get deployment hello-kotlingboot
+---
+NAME                DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+hello-kotlingboot   3         3         3            3           10m
+---
+
+# podも増えている
+kubectl get pods
+---
+NAME                                 READY     STATUS    RESTARTS   AGE
+hello-kotlingboot-7c7dfcfdcc-4vk5l   1/1       Running   0          21s
+hello-kotlingboot-7c7dfcfdcc-t6s6n   1/1       Running   0          10m
+hello-kotlingboot-7c7dfcfdcc-wl8pl   1/1       Running   0          21s
+---
+```
+
+#### 作成したリソースのお掃除
+```shell
+# サービスを削除
+kubectl delete service hello-kotlingboot
+# ロードバランサが削除されるのを待つ
+gcloud compute forwarding-rules list
+# コンテナ クラスタを削除
+gcloud container clusters delete kotlingboot
 ```
