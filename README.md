@@ -55,7 +55,7 @@
 
 ## Kotling Bootアプリの作成
 ### Project作成
-- [IntellJ IDEA Ulitimate](https://www.jetbrains.com/idea/)の`Spring Intializer`からプロジェクトを作成する機能を使う
+- [IntelliJ IDEA Ulitimate](https://www.jetbrains.com/idea/)の`Spring Intializer`からプロジェクトを作成する機能を使う
   - "Create New Project"
   ![image](https://user-images.githubusercontent.com/8069859/44628645-d76cb800-a97e-11e8-8f3d-873d00ad16e9.png)
   - "Spring Initializer"
@@ -224,7 +224,7 @@ t.AnnotationConfigReactiveWebServerApplicationContext@b065c63: startup date [Sun
 2018-08-26 15:19:00.757  INFO 1 --- [       Thread-7] r.ipc.netty.tcp.BlockingNettyContext     : Stopped HttpServer on /0.0.0.0:8888
 ```
 
-### kubernatesでアプリを動作させる
+### kubernetesでアプリを動作させる
 #### クラスタ作成
 ```shell
 # node3つでクラスタ作成(しばらく待つ)
